@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>metaDATAinh | Редактор метаданных</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <script defer src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a href="/" class="brand" aria-label="metaDATAinh, главная">
+        <span class="brand-icon">m<span>.</span></span>
+        <span>meta<span class="brand-accent">DATA</span>inh</span>
+      </a>
+      <div class="header-right">
+        <span class="local-chip"><span class="online-dot"></span> Локальный режим</span>
+        <span id="engineStatus" class="engine-status">Проверка ExifTool…</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="eyebrow"><span class="eyebrow-line"></span> МЕТАДАННЫЕ БЕЗ ЛИШНИХ ДЕЙСТВИЙ</div>
+        <h1>Узнайте, что <em>скрыто</em><br>в вашем файле.</h1>
+        <p>Просматривайте EXIF, XMP, IPTC и другие теги. Редактируйте доступные поля и применяйте собственные наборы метаданных одним нажатием.</p>
+      </section>
+
+      <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+
+      <div class="panels">
+        <section class="panel upload-panel" aria-labelledby="uploadTitle">
+          <div class="panel-head">
+            <div>
+              <span class="section-number">01 / ФАЙЛ</span>
+              <h2 id="uploadTitle">Загрузить файл</h2>
+            </div>
+            <span class="outline-label">ДО 100 МБ</span>
+          </div>
+          <label id="dropzone" class="dropzone">
+            <input type="file" id="fileInput" aria-label="Выберите файл для просмотра метаданных">
+            <span class="drop-icon" aria-hidden="true">↥</span>
+            <strong>Перетащите файл сюда</strong>
+            <span>или <span class="link-text">выберите на Mac</span></span>
+            <small>Фото, видео, аудио, PDF и другие форматы ExifTool</small>
+          </label>
+          <div id="fileCard" class="file-card" hidden>
+            <div class="file-symbol" aria-hidden="true">▤</div>
+            <div class="file-details">
+              <strong id="fileName"></strong>
+              <span id="fileStats"></span>
+            </div>
+            <a id="downloadBtn" href="#" class="small-btn" download>Скачать копию ↗</a>
+          </div>
+          <p class="panel-footnote">Исходник сохраняется без изменений. Работа идёт с отдельной копией.</p>
+        </section>
+
+        <section class="panel template-panel" aria-labelledby="templateTitle">
+          <div class="panel-head">
+            <div>
+              <span class="section-number">02 / ШАБЛОНЫ</span>
+              <h2 id="templateTitle">Ваши пресеты</h2>
+            </div>
+            <span id="templateCount" class="outline-label">0 СОХРАНЕНО</span>
+          </div>
+          <label class="input-label" for="templateSelect">Выбрать шаблон</label>
+          <select id="templateSelect" class="control"><option value="">Нет сохранённых шаблонов</option></select>
+          <div id="templatePreview" class="template-preview">Выберите шаблон, чтобы увидеть его поля.</div>
+          <div class="button-row">
+            <button id="applyTemplateBtn" class="btn btn-primary" type="button" disabled>Применить шаблон</button>
+            <button id="deleteTemplateBtn" class="btn btn-icon" type="button" title="Удалить шаблон" aria-label="Удалить шаблон" disabled>✕</button>
+          </div>
+          <div class="panel-divider"></div>
+          <label class="input-label" for="templateName">Создать из отмеченных полей</label>
+          <input id="templateName" class="control" type="text" maxlength="80" placeholder="Например, Мой копирайт">
+          <button id="saveTemplateBtn" class="btn btn-secondary full" type="button" disabled>＋ Сохранить как шаблон</button>
+          <p class="panel-footnote">Отметьте поля в таблице ниже, чтобы добавить их в шаблон.</p>
+        </section>
+      </div>
+
+      <section id="workspace" class="workspace" aria-labelledby="metaTitle" hidden>
+        <div class="workspace-title">
+          <div>
+            <span class="section-number">03 / ИНСПЕКТОР</span>
+            <h2 id="metaTitle">Метаданные файла</h2>
+            <p id="metaSummary" class="subtle"></p>
+          </div>
+          <div class="workspace-actions">
+            <button id="resetBtn" class="btn btn-ghost" type="button">Сбросить изменения</button>
+            <button id="saveChangesBtn" class="btn btn-primary" type="button">Сохранить в копию <span id="dirtyCount"></span></button>
+          </div>
+        </div>
+
+        <div class="editor-tools">
+          <label class="search-box">
+            <span aria-hidden="true">⌕</span>
+            <input id="tagSearch" type="search" placeholder="Поиск по тегам, группам и значениям">
+          </label>
+          <select id="tagFilter" class="control filter-select" aria-label="Фильтр тегов">
+            <option value="all">Все теги</option>
+            <option value="editable">Только редактируемые</option>
+            <option value="readonly">Только для чтения</option>
+          </select>
+        </div>
+
+        <div class="table-scroll">
+          <table class="metadata-table">
+            <thead>
+              <tr><th>ГРУППА</th><th>НАЗВАНИЕ ТЕГА</th><th>ЗНАЧЕНИЕ</th><th class="last-col">В ШАБЛОН</th></tr>
+            </thead>
+            <tbody id="metadataBody"></tbody>
+          </table>
+          <div id="noTags" class="empty-results" hidden>Ничего не найдено по выбранному фильтру.</div>
+        </div>
+        <p class="table-footnote">Доступность изменения зависит от формата и ExifTool. Служебные теги доступны только для чтения. Очистка поля удаляет соответствующее значение при сохранении.</p>
+
+        <div class="add-panel">
+          <div class="add-title">
+            <h3>Добавить новый тег</h3>
+            <span class="subtle">Например, XMP-dc:Title</span>
+          </div>
+          <div class="new-tag-fields">
+            <label>Имя тега
+              <input id="newTag" class="control" placeholder="XMP-dc:Title" spellcheck="false">
+            </label>
+            <label>Значение
+              <input id="newValue" class="control" placeholder="Введите значение">
+            </label>
+            <button id="addTagBtn" type="button" class="btn btn-secondary">＋ Добавить</button>
+          </div>
+          <div id="newFieldsList" class="pending-tags" hidden></div>
+        </div>
+      </section>
+
+      <footer><span>metaDATAinh / локальная мастерская метаданных</span><span>Flask + ExifTool · macOS</span></footer>
+    </main>
+  </div>
+</body>
+</html>
