@@ -16,5 +16,5 @@ jobs:
           cache: pip
       - run: python -m pip install -r requirements-dev.txt
       - run: python -m compileall -q app.py
-      - run: pytest -q
+      - run: python -m pytest -q
       - run: node --check static/app.js
