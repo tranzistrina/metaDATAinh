@@ -86,7 +86,7 @@ metaDATAinh/
 
 ```bash
 python -m pip install -r requirements-dev.txt
-pytest -q
+python -m pytest -q
 ```
 
 Тесты подменяют ExifTool, поэтому проверяют работу Flask API, защиту, шаблоны и атомарность записи без настоящего исполняемого файла. Перед использованием на важных документах рекомендуем проверить работу и в реальном ExifTool на копиях файлов.
